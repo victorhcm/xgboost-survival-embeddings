@@ -50,7 +50,7 @@ def test_model_neighbors_persist_false(model):
     xgbse.fit(
         X_train,
         y_train,
-        validation_data=(X_valid, y_valid),
+        validation_data=[(X_valid, y_valid, "validation")],
         early_stopping_rounds=10,
         verbose_eval=0,
         persist_train=False,

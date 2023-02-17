@@ -28,6 +28,7 @@ time_bins = get_time_bins(T_train, E_train, 100)
 mean, high, low = calculate_kaplan_vectorized(
     T_train.values.reshape(1, -1), E_train.values.reshape(1, -1), time_bins
 )
+
 # generating xgbse predictions for all tests
 xgbse_model = XGBSEDebiasedBCE()
 
@@ -35,7 +36,10 @@ xgbse_model.fit(
     X_train,
     y_train,
     num_boost_round=1000,
-    validation_data=(X_valid, y_valid),
+    validation_data=[
+        (X_train, y_train, "train"),
+        (X_valid, y_valid, "val")
+    ],
     early_stopping_rounds=10,
     verbose_eval=0,
     time_bins=time_bins,

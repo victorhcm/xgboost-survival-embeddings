@@ -56,7 +56,7 @@ def test_survival_curve(model):
         X_train,
         y_train,
         num_boost_round=1000,
-        validation_data=(X_valid, y_valid),
+        validation_data=[(X_valid, y_valid, "val")],
         early_stopping_rounds=10,
         verbose_eval=0,
     )

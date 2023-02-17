@@ -150,6 +150,8 @@ class XGBSEDebiasedBCE(XGBSEBaseEstimator):
         self.n_jobs = n_jobs
         self.persist_train = False
         self.feature_importances_ = None
+        self.feature_importances_gain_ = None
+        self.evals_result = {}
 
     def fit(
         self,
@@ -162,6 +164,8 @@ class XGBSEDebiasedBCE(XGBSEBaseEstimator):
         persist_train=False,
         index_id=None,
         time_bins=None,
+        callbacks=None,
+        custom_metric=None,
     ):
         """
         Transform feature space by fitting a XGBoost model and returning its leaf indices.
@@ -194,6 +198,9 @@ class XGBSEDebiasedBCE(XGBSEBaseEstimator):
 
             time_bins (np.array): Specified time windows to use when making survival predictions
 
+            callbacks (): XGBoost callbacks
+
+            custom_metric (): Custom metric to be passed to XGBoost
 
         Returns:
             XGBSEDebiasedBCE: Trained XGBSEDebiasedBCE instance
@@ -208,13 +215,13 @@ class XGBSEDebiasedBCE(XGBSEBaseEstimator):
         dtrain = convert_data_to_xgb_format(X, y, self.xgb_params["objective"])
 
         # converting validation data to xgb format
-        evals = ()
+        evals = []
         if validation_data:
-            X_val, y_val = validation_data
-            dvalid = convert_data_to_xgb_format(
-                X_val, y_val, self.xgb_params["objective"]
-            )
-            evals = [(dvalid, "validation")]
+            for X_val, y_val, dataset_name in validation_data:
+                dvalid = convert_data_to_xgb_format(
+                    X_val, y_val, self.xgb_params["objective"]
+                )
+                evals.append((dvalid, dataset_name))
 
         # training XGB
         self.bst = xgb.train(
@@ -224,8 +231,15 @@ class XGBSEDebiasedBCE(XGBSEBaseEstimator):
             early_stopping_rounds=early_stopping_rounds,
             evals=evals,
             verbose_eval=verbose_eval,
+            custom_metric=custom_metric,
+            callbacks=callbacks,
+            evals_result=self.evals_result,
         )
-        self.feature_importances_ = self.bst.get_score()
+
+        self.feature_importances_ = self.bst.get_score(importance_type="weight")
+
+        self.feature_importances_gain_ = self.bst.get_score(importance_type="gain")
+
         # predicting and encoding leaves
         self.encoder = OneHotEncoder()
         leaves = self.bst.predict(

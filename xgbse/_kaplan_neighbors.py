@@ -155,13 +155,13 @@ class XGBSEKaplanNeighbors(XGBSEBaseEstimator):
         dtrain = convert_data_to_xgb_format(X, y, self.xgb_params["objective"])
 
         # converting validation data to xgb format
-        evals = ()
+        evals = []
         if validation_data:
-            X_val, y_val = validation_data
-            dvalid = convert_data_to_xgb_format(
-                X_val, y_val, self.xgb_params["objective"]
-            )
-            evals = [(dvalid, "validation")]
+            for X_val, y_val, dataset_name in validation_data:
+                dvalid = convert_data_to_xgb_format(
+                    X_val, y_val, self.xgb_params["objective"]
+                )
+                evals.append((dvalid, dataset_name))
 
         # training XGB
         self.bst = xgb.train(

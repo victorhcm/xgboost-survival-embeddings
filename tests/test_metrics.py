@@ -44,7 +44,7 @@ xgbse_model.fit(
     X_train,
     y_train,
     num_boost_round=1000,
-    validation_data=(X_valid, y_valid),
+    validation_data=[(X_valid, y_valid, "validation")],
     early_stopping_rounds=10,
     verbose_eval=0,
     time_bins=time_bins,
