@@ -166,6 +166,7 @@ class XGBSEDebiasedBCE(XGBSEBaseEstimator):
         time_bins=None,
         callbacks=None,
         custom_metric=None,
+        sample_weight=None,
     ):
         """
         Transform feature space by fitting a XGBoost model and returning its leaf indices.
@@ -213,6 +214,10 @@ class XGBSEDebiasedBCE(XGBSEBaseEstimator):
 
         # converting data to xgb format
         dtrain = convert_data_to_xgb_format(X, y, self.xgb_params["objective"])
+
+        # set sample weight
+        if sample_weight is not None:
+            dtrain.set_weight(sample_weight)
 
         # converting validation data to xgb format
         evals = []
